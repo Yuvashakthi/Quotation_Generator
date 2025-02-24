@@ -1,0 +1,10 @@
+{
+    // Set the default font for the editor workspace
+    "editor.fontFamily": "Fira Code, Consolas, 'Courier New', monospace",
+  
+    // Set the default font for the integrated terminal
+    "terminal.integrated.fontFamily": "Fira Code, monospace",
+  
+    // Optionally enable font ligatures for the editor
+    "editor.fontLigatures": true
+  }

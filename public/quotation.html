@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Quotation Details</h1>
+    <div id="quotationContainer"></div>
+    <button onclick="window.print()">Print Quotation</button>
+
+    <script>
+        function displayQuotation() {
+            let quotationData = JSON.parse(localStorage.getItem("quotationData"));
+
+            if (!quotationData) {
+                document.getElementById("quotationContainer").innerHTML = "<p>No quotation data found.</p>";
+                return;
+            }
+
+            let html = `
+                <p><strong>Business Name:</strong> ${quotationData.businessName}</p>
+                <p><strong>Email:</strong> ${quotationData.email}</p>
+                <p><strong>Phone:</strong> ${quotationData.phone}</p>
+                <p><strong>Address:</strong> ${quotationData.address}</p>
+                <p><strong>Quotation ID:</strong> ${quotationData.quotationId}</p>
+                <p><strong>Date:</strong> ${quotationData.date}</p>
+                <h3>Items</h3>
+                <table border="1">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Item/Service</th>
+                        <th>Item/Service ID</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (INR)</th>
+                        <th>Total Price (INR)</th>
+                    </tr>`;
+
+            quotationData.items.forEach((item, index) => {
+                html += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td>${item.service}</td>
+                        <td>${item.serviceId}</td>
+                        <td>${item.quantity}</td>
+                        <td>${item.unitPrice}</td>
+                        <td>${item.totalPrice}</td>
+                    </tr>`;
+            });
+
+            html += `</table>`;
+
+            document.getElementById("quotationContainer").innerHTML = html;
+        }
+
+        window.onload = displayQuotation;
+    </script>
+</body>
+</html>

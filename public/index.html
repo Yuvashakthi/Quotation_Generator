@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotation Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Quotation Generator</h1>
+    <button class="create" onclick="openPopup()">Create Your Quotation</button>
+    
+    <div class="overlay" id="overlay" onclick="closePopup()"></div>
+    
+    <div class="popup" id="popup">
+        <h2>Quotation Form</h2>
+        <form id="quotationForm" class="quotation-form">
+            <div style="display:flex;">
+                <label>Business Name:</label>
+                <input type="text" id="businessName" required>
+            </div>
+            <br>
+            <div style="display:flex;">
+                <label>Email:</label>
+                <input type="email" id="email" required>
+            </div>
+            <br>
+            <div style="display:flex;">
+                <label>Phone Number:</label>
+                <input type="tel" id="phone" required>
+            </div>
+            <br>
+            <div style="display:flex;">
+                <label>Address:</label>
+                <input type="text" id="address" required>
+            </div>
+            <br>
+            <div style="display:flex;">
+                <label>Quotation ID:</label>
+                <input type="text" id="quotationId" readonly>
+            </div>
+           <br>
+            <div style="display:flex;">
+                <label>Date:</label>
+                <input type="text" id="date" readonly>
+            </div>
+            <br>
+            <div style="display:flex;">
+                <label>Client ID:</label>
+                <input type="text" id="clientId" required>
+            </div>
+            <br>
+            <button type="button" onclick="addRow()">Add Item</button>
+            <div class="table-container" id="tableContainer">
+                <table id="itemTable">
+                    <tr>
+                        <th>S.No</th>
+                        <th>Item/Service</th>
+                        <th>Item/Service ID</th>
+                        <th>Quantity</th>
+                        <th>Unit Price (INR)</th>
+                        <th>Total Price (INR)</th>
+                    </tr>
+                </table>
+            </div>
+            <button class="create" type="button" onclick="saveQuotation()">Generate Quotation</button>
+            <button class="create" type="button" onclick="fetchQuotationData()">Fetch Data</button>
+
+        </form>
+        <p id="responseMessage"></p>
+
+    </div>
+
+    <script>
+
+document.getElementById("email").addEventListener("blur", async function() {
+    let email = this.value.trim();
+    if (email) {
+        try {
+            let response = await fetch(`http://localhost:3000/api/clients?email=${encodeURIComponent(email)}`);
+            
+            if (!response.ok) {
+                throw new Error("Client not found");
+            }
+            
+            let clientData = await response.json();
+
+            // Populate form fields with data from the database
+            document.getElementById("businessName").value = clientData.businessName || "";
+            document.getElementById("phone").value = clientData.phone || "";
+            document.getElementById("address").value = clientData.address || "";
+            document.getElementById("clientId").value = clientData.clientId || "";
+
+        } catch (error) {
+            console.error("Error fetching client data:", error);
+            alert("No client data found for this email.");
+        }
+    }
+});
+let serialNumber = 1;
+
+async function openPopup() {
+    document.getElementById('popup').style.display = 'block';
+    document.getElementById('overlay').style.display = 'block';
+    document.body.classList.add('no-scroll');
+
+    let now = new Date();
+    let year = now.getFullYear().toString().slice(-2);
+    let month = ("0" + (now.getMonth() + 1)).slice(-2);
+
+    // Fetch the latest serial number
+    let serial = await getNextSerialNumber();
+
+    document.getElementById('quotationId').value = `#Q-${month}${year}-${serial}`;
+    document.getElementById('date').value = now.toISOString().split('T')[0];
+
+    let table = document.getElementById("itemTable");
+    if (table.rows.length === 1) {
+        addRow();
+    }
+
+    popup.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+function closePopup() {
+    document.getElementById('popup').style.display = 'none';
+    document.getElementById('overlay').style.display = 'none';
+    document.body.classList.remove('no-scroll');
+}
+
+function addRow() {
+    let table = document.getElementById("itemTable");
+    let rowCount = table.rows.length;
+    let row = table.insertRow(rowCount);
+
+    row.innerHTML = `
+    <td>${rowCount}</td>
+    <td>
+        <select required class="items" onchange="updateServiceId(this)">
+            <option value="">Select a Service</option>
+            <option value="Social Media Marketing">Social Media Marketing & Management</option>
+            <option value="SEO">SEO</option>
+            <option value="PPC Ads">PPC Ads</option>
+            <option value="Digital Analytics">Digital Analytics & Reporting</option>
+            <option value="Website Design">Website Design & Development</option>
+            <option value="Software Development">Software Development</option>
+            <option value="Mobile App Development">Mobile App Development</option>
+            <option value="Web Hosting">Web Hosting & Maintenance</option>
+            <option value="Video Production">Video Production</option>
+            <option value="Graphic Designing">Graphic Designing</option>
+            <option value="Influencer Marketing">Influencer Marketing</option>
+            <option value="Product Photography">Product Photography</option>
+            <option value="Bulk SMS">Bulk SMS & WhatsApp</option>
+            <option value="Content Creation">Content Creation</option>
+        </select>
+    </td>
+    <td><input type="text" class="id-select" style="width:120px; margin-top:10px;" readonly></td>
+    <td><input type="number" min="1" value="1" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
+    <td><input type="number" min="0" value="0" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
+    <td class="total-price">0</td>
+     <td><button class="remove-btn" style="width:70px; font-size:14px;" onclick="removeRow(this)">Remove</button></td>`
+    ;
+}
+
+function calculateTotal(element) {
+    let row = element.closest("tr");
+    let quantity = row.cells[3].querySelector("input").value || 1;
+    let unitPrice = row.cells[4].querySelector("input").value || 0;
+    row.cells[5].textContent = (quantity * unitPrice).toFixed(2);
+}
+function removeRow(button) {
+    let row = button.closest("tr");
+    row.remove();
+}
+
+const serviceIdMap = {
+    "Social Media Marketing": "NP-DM101",
+    "SEO": "NP-DM102",
+    "PPC Ads": "NP-DM103",
+    "Digital Analytics": "NP-DM104",
+    "Website Design": "NP-DV201",
+    "Software Development": "NP-DV202",
+    "Mobile App Development": "NP-DV203",
+    "Web Hosting": "NP-DV204",
+    "Video Production": "NP-PK301",
+    "Graphic Designing": "NP-PK302",
+    "Influencer Marketing": "NP-PK303",
+    "Product Photography": "NP-PK304",
+    "Bulk SMS": "NP-PK305",
+    "Content Creation": "NP-PK306"
+};
+
+function updateServiceId(selectElement) {
+    let selectedService = selectElement.value;
+    let row = selectElement.closest("tr");
+    let idInput = row.querySelector(".id-select");
+    idInput.value = serviceIdMap[selectedService] || "";
+}
+
+async function getNextSerialNumber() {
+    try {
+        const response = await fetch("http://localhost:3000/api/latest-quotation");
+        const data = await response.json();
+
+        let serialNumber = 1; // Default if no quotations exist
+
+        if (data.latestQuotationId) {
+            // Extract the last serial number from the latest Quotation ID
+            let lastSerial = parseInt(data.latestQuotationId.split('-').pop(), 10);
+            serialNumber = lastSerial + 1;
+        }
+
+        return ("00" + serialNumber).slice(-3); // Format as 3-digit number
+    } catch (error) {
+        console.error("Error fetching latest serial number:", error);
+        return "001"; // Default in case of an error
+    }
+}
+
+
+
+async function fetchClientData() {
+    const email = document.getElementById("emailInput").value.trim();
+    const messageElement = document.getElementById("message");
+    const detailsElement = document.getElementById("quotationDetails");
+
+    if (!email) {
+        messageElement.textContent = "Please enter a valid email.";
+        detailsElement.innerHTML = "";
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:3000/api/clients?email=${email}`);
+
+        if (response.status === 404) {
+            messageElement.textContent = "No data found. Please enter all details.";
+            detailsElement.innerHTML = "";
+        } else if (response.ok) {
+            const data = await response.json();
+            messageElement.textContent = "Client data found!";
+            detailsElement.innerHTML = JSON.stringify(data, null, 2);
+        } else {
+            messageElement.textContent = "Error fetching data.";
+            detailsElement.innerHTML = "";
+        }
+    } catch (error) {
+        messageElement.textContent = "Server error. Please try again later.";
+        console.error("Error fetching client data:", error);
+    }
+}
+
+async function saveQuotation() {
+    let businessName = document.getElementById("businessName").value.trim();
+    let email = document.getElementById("email").value.trim();
+    let phone = document.getElementById("phone").value.trim();
+    let address = document.getElementById("address").value.trim();
+    let quotationId = document.getElementById("quotationId").value.trim();
+    let date = document.getElementById("date").value.trim();
+    let clientId = document.getElementById("clientId").value.trim();
+    
+    let items = [];
+    let table = document.getElementById("itemTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        let row = table.rows[i];
+        let service = row.cells[1].querySelector("select").value;
+        let serviceId = row.cells[2].querySelector("input").value;
+        let quantity = row.cells[3].querySelector("input").value;
+        let unitPrice = row.cells[4].querySelector("input").value;
+        let totalPrice = row.cells[5].textContent;
+
+        if (service && serviceId && quantity && unitPrice) {
+            items.push({ service, serviceId, quantity, unitPrice, totalPrice });
+        }
+    }
+
+    if (!businessName || !email || !phone || !address || !quotationId || !date || items.length === 0) {
+        alert("All fields are required!");
+        return;
+    }
+
+    let quotationData = { businessName, email, phone, address, quotationId, date, items };
+
+    try {
+        const response = await fetch("http://localhost:3000/api/quotations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(quotationData)
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Error saving quotation.");
+        }
+
+        alert("Quotation saved successfully!");
+    } catch (error) {
+        console.error("Error:", error);
+        alert("Failed to save quotation. Please try again.");
+    }
+
+     
+    // **Fixing tableRows issue**
+    let tableRows = "";
+    items.forEach((item, index) => {
+        tableRows += `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.service}</td>
+                <td>${item.serviceId}</td>
+                <td>${item.quantity}</td>
+                <td>${item.unitPrice}</td>
+                <td>${item.totalPrice}</td>
+            </tr>
+        `;
+    });
+
+    // Create a new HTML structure for the output page
+    let outputHTML = `
+        <html>
+        <head>
+            <title>Quotation - ${quotationId}</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+                th { background: #f4f4f4; }
+                h2 { text-align: center; }
+            </style>
+        </head>
+        <body>
+            <h2>Quotation Details</h2>
+            <table>
+                <tr><th>Quotation ID</th><td>${quotationId}</td></tr>
+                <tr><th>Date</th><td>${date}</td></tr>
+                <tr><th>Client ID</th><td>${clientId}</td></tr>
+            </table>
+            <br>
+            <table>
+                <tr><th>Business Name</th><td>${businessName}</td></tr>
+                <tr><th>Email</th><td>${email}</td></tr>
+                <tr><th>Phone</th><td>${phone}</td></tr>
+                <tr><th>Address</th><td>${address}</td></tr>
+            </table>
+            <br>
+            <h3>Quotation Items</h3>
+            <table>
+                <tr>
+                    <th>S.No</th>
+                    <th>Item/Service</th>
+                    <th>Item/Service ID</th>
+                    <th>Quantity</th>
+                    <th>Unit Price (INR)</th>
+                    <th>Total Price (INR)</th>
+                </tr>
+                ${tableRows}
+            </table>
+            <br>
+            <button onclick="window.print()">Print Quotation</button>
+        </body>
+        </html>
+    `;
+
+    // Open new page and write the output
+    let newWin = window.open("", "_blank");
+    newWin.document.write(outputHTML);
+    newWin.document.close();
+}
+
+    </script>
+</body>
+</html>
