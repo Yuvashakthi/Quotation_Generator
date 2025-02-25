@@ -15,6 +15,7 @@
     <div class="popup" id="popup">
         <h2>Quotation Form</h2>
         <form id="quotationForm" class="quotation-form">
+            <h2>Quotation Generator</h2><br>
             <div style="display:flex;">
                 <label>Business Name:</label>
                 <input type="text" id="businessName" required>
@@ -61,8 +62,29 @@
                         <th>Unit Price (INR)</th>
                         <th>Total Price (INR)</th>
                     </tr>
+                    
+                </table>
+                <br>
+                <table class="summary">
+                    <tr>
+                        <td>Subtotal (INR):</td>
+                        <td><input type="text" id="subtotal" readonly></td>
+                    </tr>
+                    <tr>
+                        <td>Discount (INR):</td>
+                        <td><input type="number" id="discount" min="0" value="0" oninput="calculateFinalTotal()"></td>
+                    </tr>
+                    <tr>
+                        <td>Tax (%):</td>
+                        <td><input type="number" id="tax" min="0" value="0" oninput="calculateFinalTotal()"></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Final Total (INR):</strong></td>
+                        <td><input type="text" id="finalTotal" readonly></td>
+                    </tr>
                 </table>
             </div>
+            
             <button class="create" type="button" onclick="saveQuotation()">Generate Quotation</button>
             <button class="create" type="button" onclick="fetchQuotationData()">Fetch Data</button>
 
@@ -159,20 +181,53 @@ function addRow() {
     <td><input type="number" min="1" value="1" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
     <td><input type="number" min="0" value="0" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
     <td class="total-price">0</td>
-     <td><button class="remove-btn" style="width:70px; font-size:14px;" onclick="removeRow(this)">Remove</button></td>`
-    ;
+    <td><button class="remove-btn"style="width:70px; font-size:14px;"  onclick="removeRow(this)">Remove</button></td>`;
+
+    calculateFinalTotal();
 }
 
 function calculateTotal(element) {
     let row = element.closest("tr");
     let quantity = row.cells[3].querySelector("input").value || 1;
     let unitPrice = row.cells[4].querySelector("input").value || 0;
-    row.cells[5].textContent = (quantity * unitPrice).toFixed(2);
+    let total = quantity * unitPrice;
+    row.cells[5].textContent = total.toFixed(2);
+
+    calculateFinalTotal();
 }
+
 function removeRow(button) {
     let row = button.closest("tr");
     row.remove();
+    updateSerialNumbers();
+    calculateFinalTotal();
 }
+
+function updateSerialNumbers() {
+    let table = document.getElementById("itemTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        table.rows[i].cells[0].textContent = i;
+    }
+}
+
+function calculateFinalTotal() {
+    let total = 0;
+    let table = document.getElementById("itemTable");
+    for (let i = 1; i < table.rows.length; i++) {
+        total += parseFloat(table.rows[i].cells[5].textContent) || 0;
+    }
+
+    document.getElementById("subtotal").value = total.toFixed(2);
+
+    let discount = parseFloat(document.getElementById("discount").value) || 0;
+    let tax = parseFloat(document.getElementById("tax").value) || 0;
+
+    let totalAfterDiscount = total - discount;
+    let taxAmount = (totalAfterDiscount * tax) / 100;
+    let finalTotal = totalAfterDiscount + taxAmount;
+
+    document.getElementById("finalTotal").value = finalTotal.toFixed(2);
+    }
 
 const serviceIdMap = {
     "Social Media Marketing": "NP-DM101",
@@ -259,18 +314,24 @@ async function saveQuotation() {
     let quotationId = document.getElementById("quotationId").value.trim();
     let date = document.getElementById("date").value.trim();
     let clientId = document.getElementById("clientId").value.trim();
-    
+
+    // Get Subtotal, Discount, and Tax Fields
+    let subtotal = parseFloat(document.getElementById("subtotal").value) || 0;
+    let discount = parseFloat(document.getElementById("discount").value) || 0;
+    let tax = parseFloat(document.getElementById("tax").value) || 0;
+
     let items = [];
     let table = document.getElementById("itemTable");
+    
     for (let i = 1; i < table.rows.length; i++) {
         let row = table.rows[i];
         let service = row.cells[1].querySelector("select").value;
         let serviceId = row.cells[2].querySelector("input").value;
-        let quantity = row.cells[3].querySelector("input").value;
-        let unitPrice = row.cells[4].querySelector("input").value;
-        let totalPrice = row.cells[5].textContent;
+        let quantity = parseFloat(row.cells[3].querySelector("input").value) || 0;
+        let unitPrice = parseFloat(row.cells[4].querySelector("input").value) || 0;
+        let totalPrice = parseFloat(row.cells[5].textContent) || 0;
 
-        if (service && serviceId && quantity && unitPrice) {
+        if (service && serviceId && quantity > 0 && unitPrice >= 0) {
             items.push({ service, serviceId, quantity, unitPrice, totalPrice });
         }
     }
@@ -280,7 +341,23 @@ async function saveQuotation() {
         return;
     }
 
-    let quotationData = { businessName, email, phone, address, quotationId, date, items };
+    // Calculate Final Total
+    let finalTotal = (subtotal - discount) + (subtotal * tax / 100);
+
+    let quotationData = {
+        businessName,
+        email,
+        phone,
+        address,
+        quotationId,
+        date,
+        clientId,
+        items,
+        subtotal,
+        discount,
+        tax,
+        finalTotal
+    };
 
     try {
         const response = await fetch("http://localhost:3000/api/quotations", {
@@ -295,12 +372,24 @@ async function saveQuotation() {
         }
 
         alert("Quotation saved successfully!");
+
+        // Reset the form after successful submission
+        document.getElementById("quotationForm").reset();
+        document.getElementById("itemTable").innerHTML = `<tr>
+            <th>S.No</th>
+            <th>Item/Service</th>
+            <th>Item/Service ID</th>
+            <th>Quantity</th>
+            <th>Unit Price (INR)</th>
+            <th>Total Price (INR)</th>
+        </tr>`;
+
     } catch (error) {
         console.error("Error:", error);
         alert("Failed to save quotation. Please try again.");
     }
 
-     
+
     // **Fixing tableRows issue**
     let tableRows = "";
     items.forEach((item, index) => {
@@ -327,6 +416,14 @@ async function saveQuotation() {
                 th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
                 th { background: #f4f4f4; }
                 h2 { text-align: center; }
+                summary-container { width: 300px; max-width: 400px; margin-left:200px;} 
+                summary {  width: 100%;  border-collapse: collapse;  margin-bottom: 10px;}
+                /* Hide print button when printing */
+                @media print {
+                    .print-btn { display: none; }
+                }
+
+
             </style>
         </head>
         <body>
@@ -355,9 +452,24 @@ async function saveQuotation() {
                     <th>Total Price (INR)</th>
                 </tr>
                 ${tableRows}
-            </table>
+            </table><br><br>
+            <div class="summary-container" style=" width: 300px; max-width: 400px;">
+                <div class="summary">
+                    <tr><td>Subtotal (INR):</td><td>${subtotal.toFixed(2)}</td></tr>             
+                </div><br>
+                <div  class="summary">
+                    <tr><td>Discount (INR):</td><td>${discount.toFixed(2)}</td></tr>
+                </div><br>
+                <div  class="summary">
+                    <tr><td>Tax (%):</td><td>${tax}%</td></tr>
+                </div><br>
+
+                <div class="total-container" style="font-weight: bold;font-size: 22px;width: 100%;max-width: 400px;margin: 10px auto;">
+                     Total Due Amt: Rs. ${finalTotal.toLocaleString()}
+                </div>
+            </div>
             <br>
-            <button onclick="window.print()">Print Quotation</button>
+            <button class="print-btn" onclick="window.print()">Print Quotation</button>
         </body>
         </html>
     `;

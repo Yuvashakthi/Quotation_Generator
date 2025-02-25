@@ -117,3 +117,19 @@ body.no-scroll {
     width:150px;
 }
 
+
+.result-box {
+    background-color: #2a1f49;
+    color: white;
+    padding: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 15px;
+    border-radius: 5px;
+}
+
+.total{
+    margin-top:10px;
+}
+
