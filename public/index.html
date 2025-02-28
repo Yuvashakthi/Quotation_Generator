@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <title>Quotation Generator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -17,41 +18,58 @@
         <form id="quotationForm" class="quotation-form">
             <h2>Quotation Generator</h2><br>
             <div style="display:flex;">
-                <label>Business Name:</label>
-                <input type="text" id="businessName" required>
-            </div>
+                <div style="display:flex;">
+                    <label>Email:</label>
+                    <input type="email" id="email" required>
+                </div>             
+                <div style="display:flex;">
+                    <label>Name:</label>
+                    <input type="text" id="Name" required>
+                </div>                 
+                
+            </div>          
+            <br>
+            <div  style="display:flex;">
+                <div style="display:flex;">
+                    <label>Phone Number:</label>
+                    <input type="tel" id="phone" required>
+                </div> 
+                <div style="display:flex;">
+                    <label>Address:</label>
+                    <input type="text" id="address" required>
+                </div>
+                
+                                              
+            </div>           
             <br>
             <div style="display:flex;">
-                <label>Email:</label>
-                <input type="email" id="email" required>
-            </div>
-            <br>
-            <div style="display:flex;">
-                <label>Phone Number:</label>
-                <input type="tel" id="phone" required>
-            </div>
-            <br>
-            <div style="display:flex;">
-                <label>Address:</label>
-                <input type="text" id="address" required>
-            </div>
-            <br>
-            <div style="display:flex;">
-                <label>Quotation ID:</label>
-                <input type="text" id="quotationId" readonly>
-            </div>
+                <div style="display:flex;">
+                    <label>Quotation ID:</label>
+                    <input type="text" id="quotationId" readonly>
+                </div>
+                <div style="display:flex;">
+                    <label>Date:</label>
+                    <input type="text" id="date" readonly>
+                
+
+                </div>
+                                          
+            </div>         
            <br>
-            <div style="display:flex;">
-                <label>Date:</label>
-                <input type="text" id="date" readonly>
+           <div  style="display:flex;">                 
+                <div style="display:flex;">
+                    <label>Business Name:</label>
+                    <input type="text" id="businessName" required>
+                </div> 
+                <div style="display:flex;">
+                    <label>Client ID:</label>
+                    <input type="text" id="clientId" required>
+                </div>                                                                          
             </div>
-            <br>
-            <div style="display:flex;">
-                <label>Client ID:</label>
-                <input type="text" id="clientId" required>
-            </div>
+           
             <br>
             <button type="button" onclick="addRow()">Add Item</button>
+            <button class="fetch" style="width:120px;"type="button" onclick="fetchQuotationData()">Fetch Data</button>
             <div class="table-container" id="tableContainer">
                 <table id="itemTable">
                     <tr>
@@ -86,7 +104,7 @@
             </div>
             
             <button class="create" type="button" onclick="saveQuotation()">Generate Quotation</button>
-            <button class="create" type="button" onclick="fetchQuotationData()">Fetch Data</button>
+       
 
         </form>
         <p id="responseMessage"></p>
@@ -108,6 +126,7 @@ document.getElementById("email").addEventListener("blur", async function() {
             let clientData = await response.json();
 
             // Populate form fields with data from the database
+            document.getElementById("Name").value = clientData.Name || "";
             document.getElementById("businessName").value = clientData.businessName || "";
             document.getElementById("phone").value = clientData.phone || "";
             document.getElementById("address").value = clientData.address || "";
@@ -119,6 +138,12 @@ document.getElementById("email").addEventListener("blur", async function() {
         }
     }
 });
+
+let script = document.createElement("script");
+script.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js";
+script.crossOrigin = "anonymous";
+document.head.appendChild(script);
+
 let serialNumber = 1;
 
 async function openPopup() {
@@ -307,6 +332,7 @@ async function fetchClientData() {
 }
 
 async function saveQuotation() {
+    let Name = document.getElementById("Name").value.trim();
     let businessName = document.getElementById("businessName").value.trim();
     let email = document.getElementById("email").value.trim();
     let phone = document.getElementById("phone").value.trim();
@@ -325,26 +351,36 @@ async function saveQuotation() {
     
     for (let i = 1; i < table.rows.length; i++) {
         let row = table.rows[i];
-        let service = row.cells[1].querySelector("select").value;
-        let serviceId = row.cells[2].querySelector("input").value;
-        let quantity = parseFloat(row.cells[3].querySelector("input").value) || 0;
-        let unitPrice = parseFloat(row.cells[4].querySelector("input").value) || 0;
-        let totalPrice = parseFloat(row.cells[5].textContent) || 0;
+        let serviceSelect = row.cells[1].querySelector("select");
+        let serviceIdInput = row.cells[2].querySelector("input");
+        let quantityInput = row.cells[3].querySelector("input");
+        let unitPriceInput = row.cells[4].querySelector("input");
+        let totalPriceCell = row.cells[5];
+
+        if (!serviceSelect || !serviceIdInput || !quantityInput || !unitPriceInput || !totalPriceCell) continue;
+
+        let service = serviceSelect.value.trim();
+        let serviceId = serviceIdInput.value.trim();
+        let quantity = parseFloat(quantityInput.value) || 0;
+        let unitPrice = parseFloat(unitPriceInput.value) || 0;
+        let totalPrice = parseFloat(totalPriceCell.textContent) || 0;
 
         if (service && serviceId && quantity > 0 && unitPrice >= 0) {
             items.push({ service, serviceId, quantity, unitPrice, totalPrice });
         }
     }
 
-    if (!businessName || !email || !phone || !address || !quotationId || !date || items.length === 0) {
+    if (!Name || !businessName || !email || !phone || !address || !quotationId || !date || items.length === 0) {
         alert("All fields are required!");
         return;
     }
 
     // Calculate Final Total
-    let finalTotal = (subtotal - discount) + (subtotal * tax / 100);
+    let finalTotal = (subtotal - discount);
+    finalTotal += finalTotal * (tax / 100); // Apply tax after discount deduction
 
     let quotationData = {
+        Name,
         businessName,
         email,
         phone,
@@ -358,6 +394,8 @@ async function saveQuotation() {
         tax,
         finalTotal
     };
+
+    console.log("Saving Quotation:", quotationData);
 
     try {
         const response = await fetch("http://localhost:3000/api/quotations", {
@@ -375,19 +413,19 @@ async function saveQuotation() {
 
         // Reset the form after successful submission
         document.getElementById("quotationForm").reset();
-        document.getElementById("itemTable").innerHTML = `<tr>
-            <th>S.No</th>
-            <th>Item/Service</th>
-            <th>Item/Service ID</th>
-            <th>Quantity</th>
-            <th>Unit Price (INR)</th>
-            <th>Total Price (INR)</th>
-        </tr>`;
+        
+
+        // Clear only table rows, keeping headers intact
+        let rowCount = table.rows.length;
+        for (let i = rowCount - 1; i > 0; i--) {
+            table.deleteRow(i);
+        }
 
     } catch (error) {
         console.error("Error:", error);
         alert("Failed to save quotation. Please try again.");
     }
+
 
 
     // **Fixing tableRows issue**
@@ -407,42 +445,146 @@ async function saveQuotation() {
 
     // Create a new HTML structure for the output page
     let outputHTML = `
-        <html>
+        <!DOCTYPE html>
+        <html lang="en">
         <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Quotation - ${quotationId}</title>
             <style>
-                body { font-family: Arial, sans-serif; padding: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-                th { background: #f4f4f4; }
-                h2 { text-align: center; }
-                summary-container { width: 300px; max-width: 400px; margin-left:200px;} 
-                summary {  width: 100%;  border-collapse: collapse;  margin-bottom: 10px;}
-                /* Hide print button when printing */
+                body { 
+                    font-family: 'Times New Roman', Times, serif;
+                    padding: 20px;
+                    color: black;
+                }
+                .header-container {
+                    display: flex; 
+                    align-items: center; 
+                    justify-content: space-between;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 10px;
+                    height:200px;
+
+                }
+                .header-container img{
+                    width:420px;
+                    height:220px;
+                }
+                
+                .divider {
+                    width: 2px; 
+                    height: 140px;
+                    background-color: black;
+                    margin: 0 20px; 
+                }
+
+                .logo {
+                    width: 120px; 
+                    height: auto;
+                }
+                .quotation-title {
+                    text-align: right;
+                    width:700px;
+                }
+                .quotation-title h1 {
+                    color: #004b8d;
+                    margin: 0;
+                    font-size:70px;
+                }
+                .quotation-title h3 {
+                    color: #f7aa2c;
+                    margin: 5px 0 0;
+                    font-size:30px;
+                }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-top: 20px; 
+                }
+                th, td { 
+                    border: 1px solid #000; 
+                    padding: 10px; 
+                    text-align: left; 
+                }
+                .user{
+                    margin-left:10px;
+                    font-weight:bold;
+                    font-size:16px;
+                }
+                .summary-container {
+                    width: 280px; 
+                    margin-top: 180px;
+                    float: right;
+                }
+                .summary-container img{
+                    width:280px;
+                    height:170px;
+                    margin-left:-20px;
+                    margin-top:20px;
+                }
+                .summary {
+                    padding: 10px;
+                    font-size: 18px;
+                }
+                .total-container {
+                    font-weight: bold;
+                    font-size: 22px;
+                    background:#00488e;
+                    color: white;
+                    text-align: center;
+                    border-radius: 5px;
+                    padding: 10px;
+                }
+                .terms {
+                    margin-top: 200px;
+                    font-size: 14px;
+                    padding:20px;
+                }
+                .terms li{
+                   margin-bottom:10px;
+                }
+                .footer {
+                    margin-top: 10px;
+                    text-align: left;
+                }
+                
+                .thank-you{
+                    margin-left:200px;
+                    color:#f7aa2c;
+                }    
+                
                 @media print {
                     .print-btn { display: none; }
                 }
-
-
             </style>
         </head>
         <body>
-            <h2>Quotation Details</h2>
-            <table>
-                <tr><th>Quotation ID</th><td>${quotationId}</td></tr>
-                <tr><th>Date</th><td>${date}</td></tr>
-                <tr><th>Client ID</th><td>${clientId}</td></tr>
+            <div class="header-container">
+                <img src="img/navi-logo.png" alt="Company Logo" class="logo">
+                <div class="divider"></div> 
+                <div class="quotation-title">
+                    <h1>Quotation</h1>
+                    <h3>Quality Services at Competitive Prices</h3>
+                </div>
+            </div>
+
+            <table style="margin-left:370px;width:700px;">
+                <tr><th>Quotation ID</th><td>${quotationId}</td><th>Date</th><td>${date}</td><th>Client ID</th><td>${clientId}</td></tr>
             </table>
             <br>
+           <div class="user">
+                <p><strong>To:</strong></p>
+                <p><strong><td>${Name}</td></strong></p>
+            </div>
             <table>
-                <tr><th>Business Name</th><td>${businessName}</td></tr>
-                <tr><th>Email</th><td>${email}</td></tr>
-                <tr><th>Phone</th><td>${phone}</td></tr>
-                <tr><th>Address</th><td>${address}</td></tr>
+               
+                <tr><th>Phone</th><td>${phone}</td><th>Email</th><td>${email}</td><th>Company</th><td>${businessName}</td></tr>
+                <tr><th>Address</th><td colspan="5">${address}</td></tr>
             </table>
-            <br>
-            <h3>Quotation Items</h3>
-            <table>
+            <br><br>
+
+           
+            <table >
                 <tr>
                     <th>S.No</th>
                     <th>Item/Service</th>
@@ -452,26 +594,52 @@ async function saveQuotation() {
                     <th>Total Price (INR)</th>
                 </tr>
                 ${tableRows}
-            </table><br><br>
-            <div class="summary-container" style=" width: 300px; max-width: 400px;">
-                <div class="summary">
-                    <tr><td>Subtotal (INR):</td><td>${subtotal.toFixed(2)}</td></tr>             
-                </div><br>
-                <div  class="summary">
-                    <tr><td>Discount (INR):</td><td>${discount.toFixed(2)}</td></tr>
-                </div><br>
-                <div  class="summary">
-                    <tr><td>Tax (%):</td><td>${tax}%</td></tr>
-                </div><br>
-
-                <div class="total-container" style="font-weight: bold;font-size: 22px;width: 100%;max-width: 400px;margin: 10px auto;">
-                     Total Due Amt: Rs. ${finalTotal.toLocaleString()}
-                </div>
-            </div>
+            </table>
             <br>
+
+            <div class="summary-container">
+                <div class="summary"><strong>Subtotal (INR):</strong> Rs. ${subtotal.toFixed(2)}</div>
+                <div class="summary"><strong>Discount (INR):</strong> Rs. ${discount.toFixed(2)}</div>
+                <div class="summary"><strong>Tax (%):</strong> ${tax}%</div><br>
+                <div class="total-container">Total Due Amt: Rs. ${finalTotal.toLocaleString()}</div>
+                <div>
+                    <img src="img/founder-sign.png" alt="Company Logo" class="logo">
+                </div>
+            
+            </div>
+           
+            <br>
+
+            <div class="terms">
+                <h3 style="color:#f7aa2c;">Terms and Conditions</h3>
+                <ul >
+                    <li>This quotation is valid for 15 days from the date mentioned above.</li>
+                    <li>Payment terms: 50% advance, balance upon completion.</li>
+                    <li>Any changes or additional requirements will be charged separately.</li>
+                </ul>
+            </div>
+                 
+            <div class="footer">
+                <div class="thank-you">
+                    <i><strong>Thank You for Your Business...!</strong></i>
+                </div>
+                <p><i class="fas fa-phone"></i> +91 9000 78 5881 | 9789070 5885</p>
+                <p><i class="fas fa-envelope"></i> info@navipromotions.in</p>
+                <p><i class="fas fa-globe"></i> www.navipromotions.in</p>
+                <p><i class="fas fa-map-marker-alt"></i> Door No. 3-1-64, Veera Balaji Nagar,</p>
+                <p>Kumily-Periyakulam road, Palanichettipatti, Theni-625531</p>
+            </div>
+
+            <br>
+
+           
+
             <button class="print-btn" onclick="window.print()">Print Quotation</button>
         </body>
         </html>
+
+
+
     `;
 
     // Open new page and write the output

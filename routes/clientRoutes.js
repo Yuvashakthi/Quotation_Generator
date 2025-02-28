@@ -21,14 +21,14 @@ router.get("/:email", async (req, res) => {
 //  Save Client Data
 router.post("/", async (req, res) => {
     try {
-        const { businessName, email, phone, address } = req.body;
+        const { Name,businessName, email, phone, address } = req.body;
         let client = await Client.findOne({ email });
 
         if (client) {
             return res.status(400).json({ message: "Client already exists" });
         }
 
-        client = new Client({ businessName, email, phone, address });
+        client = new Client({ Name, businessName, email, phone, address });
         await client.save();
         res.status(201).json(client);
     } catch (err) {
@@ -43,7 +43,7 @@ router.get('/:email', ClientController.getClientByEmail);
 router.post("/quotations", async (req, res) => {
     try {
         console.log("Request Body:", req.body); // Log the request body
-        const { businessName, email, phone, address, quotationId, date, items } = req.body;
+        const { Name, businessName, email, phone, address, quotationId, date, items } = req.body;
 
         // Ensure `items` is an array before saving
         if (!Array.isArray(items)) {
@@ -51,6 +51,7 @@ router.post("/quotations", async (req, res) => {
         }
 
         const newQuotation = new Quotation({
+            Name,
             businessName,
             email,
             phone,
@@ -71,7 +72,7 @@ router.post("/quotations", async (req, res) => {
 //  Handle Client Submission (Check or Create)
 router.post("/submit", async (req, res) => {
     try {
-        const { businessName, email, phone, address } = req.body;
+        const { Name, businessName, email, phone, address } = req.body;
 
         // Check if client exists
         let client = await Client.findOne({ email });
@@ -82,7 +83,7 @@ router.post("/submit", async (req, res) => {
         }
 
         // If client does not exist, create a new entry
-        client = new Client({ businessName, email, phone, address });
+        client = new Client({  Name,businessName, email, phone, address });
         await client.save();
 
         res.status(201).json({ message: "Client created successfully", data: client });

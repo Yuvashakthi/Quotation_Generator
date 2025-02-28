@@ -1,7 +1,8 @@
 body { 
-    font-family: Arial, sans-serif;
+    font-family: 'Times New Roman', Times, serif;
     text-align: center;
     background-color: white;
+    
    
 }
 .create{
@@ -68,6 +69,7 @@ body {
     border-radius: 8px;
     overflow-y: auto; 
     max-height: 93vh;
+    
 
     
 }
@@ -75,12 +77,18 @@ body.no-scroll {
     overflow: hidden;
 }
 
+.fetch{
+    padding:5px;
+    height:40px;
+    margin-left:50px;
+    margin-top:-10px;
+}
 /* Aligning labels and inputs */
 .quotation-form label {
-    display: flex;
-    width:170px;
-  
+    
+    width:195px; 
     margin-top: 8px;
+    
 }
 
 .quotation-form input {
@@ -133,3 +141,6 @@ body.no-scroll {
     margin-top:10px;
 }
 
+.logo{
+    background-image: url("../public/img/shakthi.jpg" );
+}
