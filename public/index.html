@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <title>Quotation Generator</title>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -111,6 +111,9 @@
 
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js"></script>
+
+
     <script>
 
 document.getElementById("email").addEventListener("blur", async function() {
@@ -139,10 +142,7 @@ document.getElementById("email").addEventListener("blur", async function() {
     }
 });
 
-let script = document.createElement("script");
-script.src = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/js/all.min.js";
-script.crossOrigin = "anonymous";
-document.head.appendChild(script);
+
 
 let serialNumber = 1;
 
@@ -450,6 +450,8 @@ async function saveQuotation() {
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
             <title>Quotation - ${quotationId}</title>
             <style>
                 body { 
@@ -635,6 +637,9 @@ async function saveQuotation() {
            
 
             <button class="print-btn" onclick="window.print()">Print Quotation</button>
+
+            
+
         </body>
         </html>
 
