@@ -179,8 +179,13 @@ function closePopup() {
 function addRow() {
     let table = document.getElementById("itemTable");
     let rowCount = table.rows.length;
-    let row = table.insertRow(rowCount);
 
+    if (rowCount > 8) {
+        alert("You can only add up to 8 rows.");
+        return;
+    }
+
+    let row = table.insertRow(rowCount);
     row.innerHTML = `
     <td>${rowCount}</td>
     <td>
@@ -206,7 +211,7 @@ function addRow() {
     <td><input type="number" min="1" value="1" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
     <td><input type="number" min="0" value="0" style="width:100px; margin-top:10px;" oninput="calculateTotal(this)"></td>
     <td class="total-price">0</td>
-    <td><button class="remove-btn"style="width:70px; font-size:14px;"  onclick="removeRow(this)">Remove</button></td>`;
+    <td><button class="remove-btn" style="width:70px; font-size:14px;" onclick="removeRow(this)">Remove</button></td>`;
 
     calculateFinalTotal();
 }
@@ -469,13 +474,13 @@ async function saveQuotation() {
 
                 }
                 .header-container img{
-                    width:420px;
-                    height:220px;
+                    width:480px;
+                    height:280px;
                 }
                 
                 .divider {
-                    width: 2px; 
-                    height: 140px;
+                    width: 3px; 
+                    height: 160px;
                     background-color: black;
                     margin: 0 20px; 
                 }
@@ -491,7 +496,7 @@ async function saveQuotation() {
                 .quotation-title h1 {
                     color: #004b8d;
                     margin: 0;
-                    font-size:70px;
+                    font-size:110px;
                 }
                 .quotation-title h3 {
                     color: #f7aa2c;
@@ -515,7 +520,7 @@ async function saveQuotation() {
                 }
                 .summary-container {
                     width: 280px; 
-                    margin-top: 180px;
+                    margin-top: 100px;
                     float: right;
                 }
                 .summary-container img{
@@ -538,7 +543,7 @@ async function saveQuotation() {
                     padding: 10px;
                 }
                 .terms {
-                    margin-top: 200px;
+                    margin-top: 100px;
                     font-size: 14px;
                     padding:20px;
                 }
@@ -559,6 +564,7 @@ async function saveQuotation() {
                     .print-btn { display: none; }
                 }
             </style>
+
         </head>
         <body>
             <div class="header-container">
@@ -586,7 +592,7 @@ async function saveQuotation() {
             <br><br>
 
            
-            <table >
+            <table style="text-align:center;">
                 <tr>
                     <th>S.No</th>
                     <th>Item/Service</th>
